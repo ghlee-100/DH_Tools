@@ -1,0 +1,732 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Claude와 함께하는 귀찮은 일 줄여버리기</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --primary: #2D3436;
+            --accent: #00B8A9;
+            --accent-light: #F8F9FA;
+            --text-dark: #1E1E1E;
+            --text-light: #666666;
+            --white: #FFFFFF;
+            --border: #E0E0E0;
+        }
+
+        body {
+            font-family: 'Segoe UI', 'Noto Sans KR', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+            min-height: 100vh;
+            padding: 20px;
+            overflow-y: auto;
+        }
+
+        .presentation-container {
+            width: 100%;
+            max-width: 1200px;
+            min-height: calc(100vh - 40px);
+            max-height: calc(100vh - 40px);
+            position: relative;
+            background: var(--white);
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .slides-wrapper {
+            flex: 1;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            position: relative;
+        }
+
+        .slide {
+            display: none;
+            opacity: 0;
+            transition: opacity 0.6s ease-in-out;
+            width: 100%;
+            flex: 1;
+            padding: 45px 60px 40px 60px;
+            overflow-y: auto;
+            animation: slideIn 0.6s ease-out;
+        }
+
+        .slide.active {
+            display: flex;
+            opacity: 1;
+            flex-direction: column;
+            justify-content: center;
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .slide-1 {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: var(--white);
+            text-align: center;
+        }
+
+        .slide-1 h1 {
+            font-size: 3.5em;
+            font-weight: 800;
+            margin-bottom: 20px;
+            letter-spacing: -2px;
+            line-height: 1.2;
+        }
+
+        .slide-1 .subtitle {
+            font-size: 1.5em;
+            font-weight: 300;
+            opacity: 0.95;
+            margin-top: 40px;
+            line-height: 1.6;
+        }
+
+        .slide-2, .slide-3, .slide-4, .slide-5, .slide-6, .slide-7, .slide-8 {
+            background: var(--white);
+        }
+
+        .slide-title-with-emoji {
+            display: flex;
+            align-items: center;
+            margin-bottom: 30px;
+        }
+
+        .slide-title-with-emoji h2 {
+            font-size: 2.8em;
+            font-weight: 700;
+            color: var(--primary);
+            border-bottom: 4px solid var(--accent);
+            padding-bottom: 10px;
+            flex: 1;
+        }
+
+        .emoji {
+            font-size: 2.5em;
+            margin-right: 15px;
+        }
+
+        .content-box {
+            display: grid;
+            gap: 20px;
+            margin-top: 20px;
+        }
+
+        .tool-card {
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            border-left: 5px solid var(--accent);
+            padding: 20px;
+            border-radius: 10px;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        .tool-card:hover {
+            transform: translateX(10px);
+            box-shadow: 0 10px 30px rgba(0, 184, 169, 0.2);
+        }
+
+        .tool-card h3 {
+            color: var(--accent);
+            font-size: 1.3em;
+            margin-bottom: 10px;
+            font-weight: 700;
+        }
+
+        .tool-card p {
+            color: var(--text-dark);
+            font-size: 1em;
+            line-height: 1.6;
+            margin-bottom: 10px;
+        }
+
+        .comparison-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+            background: var(--white);
+            border-radius: 10px;
+            overflow: hidden;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .comparison-table th {
+            background: var(--accent);
+            color: var(--white);
+            padding: 15px;
+            font-weight: 700;
+            text-align: left;
+            font-size: 1em;
+        }
+
+        .comparison-table td {
+            padding: 12px 15px;
+            border-bottom: 1px solid var(--border);
+            font-size: 0.95em;
+            line-height: 1.5;
+        }
+
+        .comparison-table tr:nth-child(even) {
+            background: var(--accent-light);
+        }
+
+        .comparison-table tr:hover {
+            background: #E3F2FD;
+        }
+
+        .feature-label {
+            font-weight: 600;
+            color: var(--primary);
+            min-width: 150px;
+        }
+
+        .code-example {
+            background: #282c34;
+            color: #abb2bf;
+            padding: 15px;
+            border-radius: 8px;
+            margin: 10px 0;
+            font-family: 'Courier New', monospace;
+            font-size: 0.9em;
+            overflow-x: auto;
+            line-height: 1.5;
+        }
+
+        .code-example span.tag {
+            color: #61afef;
+        }
+
+        .code-example span.attr {
+            color: #e06c75;
+        }
+
+        .slide-8 {
+            background: linear-gradient(135deg, #f5f7fa 0%, #e8ebf0 100%);
+            color: var(--primary);
+            text-align: center;
+            justify-content: center !important;
+        }
+
+        .slide-8 h1 {
+            font-size: 3.2em;
+            font-weight: 800;
+            margin-bottom: 30px;
+            letter-spacing: -1px;
+        }
+
+        .slide-8 p {
+            font-size: 1.2em;
+            font-weight: 400;
+            opacity: 0.9;
+            margin: 20px 0;
+            line-height: 1.8;
+        }
+
+        .demo-button {
+            display: inline-block;
+            background: var(--accent);
+            color: var(--white);
+            padding: 18px 40px;
+            border-radius: 12px;
+            text-decoration: none;
+            font-weight: 700;
+            font-size: 1.2em;
+            margin-top: 30px;
+            transition: all 0.3s ease;
+            cursor: pointer;
+            border: none;
+            box-shadow: 0 4px 15px rgba(0, 184, 169, 0.3);
+        }
+
+        .demo-button:hover {
+            background: #009688;
+            transform: translateY(-3px);
+            box-shadow: 0 6px 20px rgba(0, 184, 169, 0.4);
+        }
+
+        .highlight {
+            color: var(--accent);
+            font-weight: 700;
+        }
+
+        .slide-number {
+            position: absolute;
+            top: 30px;
+            right: 40px;
+            font-size: 1.2em;
+            color: var(--text-light);
+            font-weight: 600;
+        }
+
+        .controls {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 15px 40px;
+            background: var(--accent-light);
+            border-top: 1px solid var(--border);
+            flex-shrink: 0;
+            min-height: 65px;
+            position: relative;
+            z-index: 100;
+        }
+
+        button {
+            background: var(--accent);
+            color: var(--white);
+            border: none;
+            padding: 12px 25px;
+            border-radius: 8px;
+            font-size: 1em;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        button:hover {
+            background: #009688;
+            transform: scale(1.05);
+        }
+
+        button:active {
+            transform: scale(0.98);
+        }
+
+        .slide-counter {
+            font-size: 1.1em;
+            font-weight: 600;
+            color: var(--primary);
+            min-width: 100px;
+            text-align: center;
+        }
+
+        .progress-bar {
+            flex: 1;
+            height: 4px;
+            background: var(--border);
+            margin: 0 30px;
+            border-radius: 2px;
+            overflow: hidden;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: var(--accent);
+            transition: width 0.3s ease;
+        }
+
+        /* Slide 4 - Cowork 사용 예시 높이 축소 */
+        .slide-4 .slide-title-with-emoji {
+            margin-bottom: 15px;
+        }
+
+        .slide-4 .content-box {
+            gap: 10px;
+        }
+
+        .slide-4 .tool-card {
+            padding: 12px;
+        }
+
+        .slide-4 .tool-card h3 {
+            font-size: 1.1em;
+            margin-bottom: 6px;
+        }
+
+        .slide-4 .tool-card p {
+            font-size: 0.9em;
+            margin-bottom: 4px;
+        }
+
+        .slide-4 .tool-card p:last-child {
+            margin-top: 4px;
+        }
+
+            .presentation-container {
+                max-height: 100vh;
+                border-radius: 0;
+                height: 100vh;
+            }
+
+            .slide {
+                padding: 40px 25px;
+            }
+
+            .slide-1 h1 {
+                font-size: 2.2em;
+            }
+
+            .slide-title-with-emoji h2 {
+                font-size: 1.8em;
+            }
+
+            .comparison-table th, .comparison-table td {
+                padding: 10px;
+                font-size: 0.85em;
+            }
+
+            .controls {
+                padding: 15px 20px;
+                flex-wrap: wrap;
+                gap: 10px;
+            }
+
+            .progress-bar {
+                margin: 0 15px;
+            }
+
+            button {
+                padding: 10px 15px;
+                font-size: 0.9em;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="presentation-container">
+        <!-- Slide 1 -->
+        <div class="slide slide-1 active">
+            <div class="slide-number">1 / 8</div>
+            <h1>Claude와 함께하는<br>귀찮은 일 줄여버리기</h1>
+            <p class="subtitle">코드를 몰라도 괜찮아요!<br><strong>쉽고 재미있게 알아보는 AI 사용법</strong></p>
+            <p class="subtitle" style="margin-top: 60px; font-size: 1.3em; font-weight: 400; opacity: 0.85;">
+                오늘은 Claude의 유료 버전 기능과<br>실제 사용법을 함께 배워봅시다! 🚀
+            </p>
+        </div>
+
+        <!-- Slide 2 -->
+        <div class="slide slide-2">
+            <div class="slide-number">2 / 8</div>
+            <div class="slide-title-with-emoji">
+                <span class="emoji">🆚</span>
+                <h2>Claude 무료 vs Team</h2>
+            </div>
+            <table class="comparison-table">
+                <thead>
+                    <tr>
+                        <th>항목</th>
+                        <th>무료 버전</th>
+                        <th>Team (최소 5명)</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td class="feature-label">가격</td>
+                        <td>무료</td>
+                        <td>사용자당 월 $25 (연간)</td>
+                    </tr>
+                    <tr>
+                        <td class="feature-label">일일/주간 한도</td>
+                        <td>5시간당 15~40회</td>
+                        <td>무료보다 6.25배 많음</td>
+                    </tr>
+                    <tr>
+                        <td class="feature-label">최신 모델</td>
+                        <td>Claude 3.5 Sonnet</td>
+                        <td>모든 최신 모델 (Opus 포함)</td>
+                    </tr>
+                    <tr>
+                        <td class="feature-label">컨텍스트 윈도우</td>
+                        <td>제한적</td>
+                        <td>200,000 토큰 (책 500쪽)</td>
+                    </tr>
+                    <tr>
+                        <td class="feature-label">파일 업로드</td>
+                        <td>O</td>
+                        <td>O (더 빠름)</td>
+                    </tr>
+                    <tr>
+                        <td class="feature-label">팀 협업</td>
+                        <td>❌</td>
+                        <td>✅ SSO, 관리자 콘솔</td>
+                    </tr>
+                    <tr>
+                        <td class="feature-label">Claude Code / Cowork</td>
+                        <td>❌</td>
+                        <td>✅ (Standard에 포함)</td>
+                    </tr>
+                    <tr>
+                        <td class="feature-label">피크 시간대</td>
+                        <td>속도 느림</td>
+                        <td>우선 접근 ⚡</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Slide 3 -->
+        <div class="slide slide-3">
+            <div class="slide-number">3 / 8</div>
+            <div class="slide-title-with-emoji">
+                <span class="emoji">🔀</span>
+                <h2>Chat vs Cowork 핵심 차이</h2>
+            </div>
+            <table class="comparison-table">
+                <thead>
+                    <tr>
+                        <th style="width: 25%;">구분</th>
+                        <th style="width: 37.5%;">일반 Chat</th>
+                        <th style="width: 37.5%;">Cowork</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td class="feature-label">파일 접근</td>
+                        <td>❌ 직접 접근 불가</td>
+                        <td>✅ 지정 폴더 접근 가능</td>
+                    </tr>
+                    <tr>
+                        <td class="feature-label">작업 방식</td>
+                        <td>한 번에 하나씩 응답</td>
+                        <td>다단계 작업 자율 처리</td>
+                    </tr>
+                    <tr>
+                        <td class="feature-label">결과물</td>
+                        <td>텍스트로 방법 설명</td>
+                        <td>완성된 파일/결과물 생성</td>
+                    </tr>
+                    <tr>
+                        <td class="feature-label">자동화</td>
+                        <td>❌ 불가능</td>
+                        <td>✅ 반복 작업 자동화</td>
+                    </tr>
+                    <tr>
+                        <td class="feature-label">컴퓨터 제어</td>
+                        <td>❌ 불가능</td>
+                        <td>✅ 화면 직접 조작 가능</td>
+                    </tr>
+                </tbody>
+            </table>
+            <div class="tool-card" style="margin-top: 15px;">
+                <h3>📌 쉬운 설명</h3>
+                <p style="font-size: 0.95em; line-height: 1.7;">
+                    <strong>Chat:</strong> "이 파일을 어떻게 정리해야 할까?" → Claude가 설명해줘요<br><br>
+                    <strong>Cowork:</strong> "이 파일 정리해줘!" → Claude가 직접 열어서 정리하고 저장해줘요 ✨
+                </p>
+            </div>
+        </div>
+
+        <!-- Slide 4 -->
+        <div class="slide slide-4">
+            <div class="slide-number">4 / 8</div>
+            <div class="slide-title-with-emoji">
+                <span class="emoji">💡</span>
+                <h2>Cowork 실제 사용 예시</h2>
+            </div>
+            <div class="content-box">
+                <div class="tool-card">
+                    <h3>📁 파일 정리</h3>
+                    <p><strong>명령:</strong> "Downloads 폴더를 날짜별·종류별로 정리해줘"</p>
+                    <p style="margin-top: 8px; color: var(--accent); font-weight: 600;">→ Claude가 직접 폴더를 열어 분류하고 이름 변경까지 완료!</p>
+                </div>
+                <div class="tool-card">
+                    <h3>📊 보고서 작성</h3>
+                    <p><strong>명령:</strong> "이 엑셀 데이터 분석해서 Word 보고서로 만들어줘"</p>
+                    <p style="margin-top: 8px; color: var(--accent); font-weight: 600;">→ 스프레드시트를 읽고 직접 문서를 생성!</p>
+                </div>
+                <div class="tool-card">
+                    <h3>🔍 리서치 + 자동화</h3>
+                    <p><strong>명령:</strong> "경쟁사 3곳을 조사해서 비교 분석표 만들어줘"</p>
+                    <p style="margin-top: 8px; color: var(--accent); font-weight: 600;">→ 웹 검색 후 결과를 직접 문서로 저장!</p>
+                </div>
+                <div class="tool-card">
+                    <h3>📅 반복 업무 자동화</h3>
+                    <p><strong>명령:</strong> "매주 월요일에 지난주 뉴스 요약을 정리해줘"</p>
+                    <p style="margin-top: 8px; color: var(--accent); font-weight: 600;">→ 예약된 작업으로 자동 처리 (일반 Chat에서는 불가능!)</p>
+                </div>
+                <div class="tool-card">
+                    <h3>📱 외출 중에도 가능</h3>
+                    <p><strong>상황:</strong> 출장 중에 폰으로 "이 보고서 정리해줘" 전송</p>
+                    <p style="margin-top: 8px; color: var(--accent); font-weight: 600;">→ 데스크톱에서 Claude가 작업하고 결과를 모바일로 전송!</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Slide 5 -->
+        <div class="slide slide-5">
+            <div class="slide-number">5 / 8</div>
+            <div class="slide-title-with-emoji">
+                <span class="emoji">📝</span>
+                <h2>알면 조금 더 편해지는 HTML 명령어</h2>
+            </div>
+            <div class="content-box">
+                <div class="tool-card">
+                    <h3>예시 1: 문단 만들기</h3>
+                    <div class="code-example">
+<span class="tag">&lt;p&gt;</span>이것은 한 문단입니다.<span class="tag">&lt;/p&gt;</span>
+<span class="tag">&lt;p&gt;</span>이것은 또 다른 문단입니다.<span class="tag">&lt;/p&gt;</span>
+                    </div>
+                    <p style="margin-top: 8px; font-size: 0.9em;">✅ 글자 앞뒤로 자동 줄바꿈이 생겨요</p>
+                </div>
+                <div class="tool-card">
+                    <h3>예시 2: 제목 만들기</h3>
+                    <div class="code-example">
+<span class="tag">&lt;h1&gt;</span>제일 중요한 제목<span class="tag">&lt;/h1&gt;</span>
+<span class="tag">&lt;h2&gt;</span>그 다음 제목<span class="tag">&lt;/h2&gt;</span>
+<span class="tag">&lt;h6&gt;</span>가장 작은 제목<span class="tag">&lt;/h6&gt;</span>
+                    </div>
+                    <p style="margin-top: 8px; font-size: 0.9em;">✅ h1부터 h6까지 6단계 (1이 가장 크고 중요)</p>
+                </div>
+                <div class="tool-card">
+                    <h3>예시 3: 링크 만들기</h3>
+                    <div class="code-example">
+<span class="tag">&lt;a href=</span><span class="attr">"https://google.com"</span><span class="tag">&gt;</span>구글 가기<span class="tag">&lt;/a&gt;</span>
+                    </div>
+                    <p style="margin-top: 8px; font-size: 0.9em;">✅ href 안에 이동할 주소를 적으면 클릭 가능해요</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Slide 6 -->
+        <div class="slide slide-6">
+            <div class="slide-number">6 / 8</div>
+            <div class="slide-title-with-emoji">
+                <span class="emoji">💻</span>
+                <h2>VS CODE로 간단히 수정하기</h2>
+            </div>
+            <div class="content-box">
+                <div class="tool-card">
+                    <h3>예시 4: 이미지 보여주기</h3>
+                    <div class="code-example">
+<span class="tag">&lt;img src=</span><span class="attr">"image.jpg"</span> <span class="attr">alt=</span><span class="attr">"설명"</span><span class="tag">&gt;</span>
+                    </div>
+                    <p style="margin-top: 8px; font-size: 0.9em;">✅ src는 이미지 주소, alt는 이미지가 안 보일 때의 대체 글</p>
+                </div>
+                <div class="tool-card">
+                    <h3>예시 5: 영역 나누기</h3>
+                    <div class="code-example">
+<span class="tag">&lt;div&gt;</span>
+  <span class="tag">&lt;p&gt;</span>이 부분들이 함께 그룹화됩니다<span class="tag">&lt;/p&gt;</span>
+<span class="tag">&lt;/div&gt;</span>
+                    </div>
+                    <p style="margin-top: 8px; font-size: 0.9em;">✅ div로 감싸면 CSS로 한 번에 스타일 적용 가능</p>
+                </div>
+                <div class="tool-card">
+                    <h3>🎯 버튼 - 가장 자주 쓰는 태그</h3>
+                    <div class="code-example">
+<span class="tag">&lt;button&gt;</span>클릭하세요<span class="tag">&lt;/button&gt;</span>
+                    </div>
+                    <p style="margin-top: 8px; font-size: 0.9em;">✅ 이것이 가장 간단하고 자주 쓰이는 태그!</p>
+                </div>
+                <div class="tool-card">
+                    <h3>💡 AI가 도와줄 수 있어요</h3>
+                    <p style="font-size: 0.95em; line-height: 1.7;">
+                        Claude에게 이렇게 물어보세요:<br>
+                        <strong>"이 HTML 코드에서 버튼 색깔을 빨간색으로 바꿔줄 수 있니?"</strong><br><br>
+                        → Claude가 수정할 코드를 알려줘요 → VS CODE에 붙여넣으면 끝!
+                    </p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Slide 7 -->
+        <div class="slide slide-7">
+            <div class="slide-number">7 / 8</div>
+            <div class="slide-title-with-emoji">
+                <span class="emoji">🎉</span>
+                <h2>완성된 웹페이지 구경하기</h2>
+            </div>
+            <p style="text-align: center; font-size: 1.2em; color: var(--text-dark); margin-top: 40px;">
+                가빈 소희가 만든 실제 프로젝트<br><br>
+                <span class="highlight" style="font-size: 1.5em;">조정료 안내문 & 종합소득세 표지<br>웹 애플리케이션</span>
+            </p>
+            <p style="text-align: center; font-size: 1em; color: var(--text-dark); margin-top: 40px; line-height: 1.8;">
+                이것도 AI와 함께라면 여러분도 만들 수 있어요!<br>
+                직접 입력해보고, 출력도 해보세요.
+            </p>
+            <div style="text-align: center; margin-top: 40px;">
+                <a href="https://ghlee-100.github.io/DH_Tools/" target="_blank" class="demo-button">
+                    🚀 웹페이지 방문하기
+                </a>
+            </div>
+        </div>
+
+        <!-- Slide 8 -->
+        <div class="slide slide-8">
+            <div class="slide-number">8 / 8</div>
+            <h1>✨ 이제 시작해보세요!</h1>
+            <p>이런 도구들을 앞으로 계속 만들어보세요!<br><br>
+            여러분의 창의력과 AI의 힘을 합치면<br>
+            <span class="highlight" style="font-size: 1.5em;">어떤 것이든 만들 수 있습니다!</span></p>
+            <p style="margin-top: 60px; font-size: 1.3em; font-weight: 700; color: var(--accent);">
+                Claude와 함께라면<br>
+                귀찮은 일은 더 이상 없어요! 🎯
+            </p>
+        </div>
+
+        <!-- Controls -->
+        <div class="controls">
+            <button id="prevBtn" onclick="changeSlide(-1)">← 이전</button>
+            <div class="progress-bar">
+                <div class="progress-fill" id="progressFill"></div>
+            </div>
+            <div class="slide-counter">
+                <span id="slideCounter">1</span> / 8
+            </div>
+            <div class="progress-bar">
+                <div class="progress-fill" id="progressFill2"></div>
+            </div>
+            <button id="nextBtn" onclick="changeSlide(1)">다음 →</button>
+        </div>
+    </div>
+
+    <script>
+        let currentSlide = 1;
+        const totalSlides = 8;
+
+        function showSlide(n) {
+            const slides = document.querySelectorAll('.slide');
+            if (n > totalSlides) currentSlide = totalSlides;
+            if (n < 1) currentSlide = 1;
+
+            slides.forEach(slide => slide.classList.remove('active'));
+            slides[currentSlide - 1].classList.add('active');
+
+            document.getElementById('slideCounter').textContent = currentSlide;
+            const progress = (currentSlide / totalSlides) * 100;
+            document.getElementById('progressFill').style.width = progress + '%';
+            document.getElementById('progressFill2').style.width = progress + '%';
+
+            document.getElementById('prevBtn').disabled = currentSlide === 1;
+            document.getElementById('nextBtn').disabled = currentSlide === totalSlides;
+        }
+
+        function changeSlide(n) {
+            currentSlide += n;
+            showSlide(currentSlide);
+        }
+
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'ArrowLeft') changeSlide(-1);
+            if (e.key === 'ArrowRight') changeSlide(1);
+        });
+
+        showSlide(currentSlide);
+    </script>
+</body>
+</html>
