@@ -16,10 +16,21 @@
     .icon { width: 36px; height: 36px; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 18px; }
     .title { font-size: 15px; font-weight: 500; margin: 0; }
     .subtitle { font-size: 12px; color: #888; margin: 0; }
+    .section-title {
+      font-size: 14px; font-weight: 600; color: #555;
+      margin: 20px 0 8px 4px;
+      padding-left: 8px;
+      border-left: 3px solid #aaa;
+    }
+    .divider {
+      border: none; border-top: 1px solid #eee;
+      margin: 20px 0;
+    }
   </style>
 </head>
 <body>
   <h2>문서 목록</h2>
+
   <a href="ai_presentation.html" class="file-link">
     <div class="icon" style="background:#e8f0fe;">📊</div>
     <div>
@@ -34,5 +45,27 @@
       <p class="subtitle">지출결의서.html</p>
     </div>
   </a>
+
+  <hr class="divider">
+  <h2>직원별 문서</h2>
+
+  <p class="section-title">🔥 가빈</p>
+  <a href="종소세_표지_v4_1_kb.html" class="file-link">
+    <div class="icon" style="background:#fff3e0;">📋</div>
+    <div>
+      <p class="title">종소세_표지_v4_1_kb</p>
+      <p class="subtitle">종소세_표지_v4_1_kb.html</p>
+    </div>
+  </a>
+
+  <p class="section-title">🔥 소희</p>
+  <a href="https://dh-sh1.github.io/project_sh/" target="_blank" class="file-link">
+    <div class="icon" style="background:#f3e8ff;">📋</div>
+    <div>
+      <p class="title">project_sh</p>
+      <p class="subtitle">dh-sh1.github.io/project_sh</p>
+    </div>
+  </a>
+
 </body>
 </html>
