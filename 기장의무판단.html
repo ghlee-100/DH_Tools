@@ -1,0 +1,616 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>기장의무 · 경비율 판단기</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+KR:wght@400;600;700&family=IBM+Plex+Mono:wght@400;500&family=Noto+Sans+KR:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg:       #F4F2EC;
+  --surface:  #FDFCF8;
+  --border:   #D6D1C4;
+  --border-l: #EAE6DC;
+  --ink:      #1C1916;
+  --ink-2:    #4A4540;
+  --ink-3:    #928D85;
+  --accent:   #B83A18;
+  --green:    #1A6840;
+  --green-bg: #E6F2EC;
+  --red:      #B82020;
+  --red-bg:   #FAE8E8;
+  --blue:     #1A5898;
+  --blue-bg:  #E4EDF7;
+  --amber:    #8A6200;
+  --amber-bg: #F7F0DC;
+  --serif:    'Noto Serif KR', serif;
+  --sans:     'Noto Sans KR', sans-serif;
+  --mono:     'IBM Plex Mono', monospace;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body {
+  font-family: var(--sans);
+  background: var(--bg);
+  color: var(--ink);
+  min-height: 100vh;
+  font-size: 14px;
+  line-height: 1.6;
+}
+
+/* HEADER */
+header {
+  background: var(--ink);
+  color: #F4F2EC;
+  padding: 36px 24px 30px;
+  text-align: center;
+}
+.header-sub {
+  font-family: var(--mono);
+  font-size: 10px;
+  letter-spacing: 0.18em;
+  opacity: 0.45;
+  text-transform: uppercase;
+  margin-bottom: 12px;
+}
+header h1 {
+  font-family: var(--serif);
+  font-size: 24px;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  line-height: 1.35;
+}
+header p {
+  margin-top: 8px;
+  font-size: 12px;
+  opacity: 0.5;
+  font-weight: 300;
+}
+
+/* CONTAINER */
+.wrap {
+  max-width: 640px;
+  margin: 0 auto;
+  padding: 28px 16px 80px;
+}
+
+/* CARD */
+.card {
+  background: var(--surface);
+  border: 1px solid var(--border-l);
+  border-radius: 8px;
+  overflow: hidden;
+  margin-bottom: 14px;
+}
+.card-head {
+  padding: 15px 20px 13px;
+  border-bottom: 1px solid var(--border-l);
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.step-dot {
+  width: 22px; height: 22px;
+  border-radius: 50%;
+  background: var(--ink);
+  color: #F4F2EC;
+  font-family: var(--mono);
+  font-size: 11px;
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0;
+}
+.card-head h2 {
+  font-family: var(--serif);
+  font-size: 14px;
+  font-weight: 600;
+}
+.card-body { padding: 18px 20px; }
+
+/* FIELDS */
+.row2 {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 14px;
+  margin-bottom: 14px;
+}
+@media (max-width: 500px) { .row2 { grid-template-columns: 1fr; } }
+.row1 { margin-bottom: 14px; }
+
+.f { display: flex; flex-direction: column; gap: 5px; }
+.f label {
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--ink-2);
+  letter-spacing: 0.02em;
+}
+.f label .req { color: var(--accent); }
+
+select, input[type="number"] {
+  font-family: var(--sans);
+  font-size: 13px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  padding: 8px 11px;
+  color: var(--ink);
+  outline: none;
+  width: 100%;
+  appearance: none;
+  transition: border-color 0.15s;
+}
+select:focus, input:focus {
+  border-color: var(--ink);
+  box-shadow: 0 0 0 3px rgba(28,25,22,0.08);
+}
+.inp-wrap { position: relative; }
+.inp-wrap input { padding-right: 32px; }
+.inp-unit {
+  position: absolute; right: 10px; top: 50%;
+  transform: translateY(-50%);
+  font-size: 11px; color: var(--ink-3);
+  font-family: var(--mono);
+  pointer-events: none;
+}
+
+/* EXPERT TOGGLE */
+.toggle-row {
+  display: flex; align-items: flex-start; gap: 10px;
+  padding: 11px 14px;
+  background: var(--amber-bg);
+  border: 1px solid #C8AC55;
+  border-radius: 4px;
+  cursor: pointer;
+  user-select: none;
+}
+.toggle-row input[type="checkbox"] {
+  width: 15px; height: 15px; margin-top: 1px;
+  flex-shrink: 0; cursor: pointer;
+  accent-color: var(--ink);
+}
+.toggle-row span { font-size: 12px; color: var(--amber); font-weight: 500; line-height: 1.5; }
+
+/* INDUSTRY ITEM */
+.ind-item {
+  display: grid;
+  grid-template-columns: 1fr 1fr 32px;
+  gap: 10px;
+  align-items: end;
+  padding: 13px;
+  background: var(--bg);
+  border: 1px solid var(--border-l);
+  border-radius: 4px;
+  margin-bottom: 8px;
+}
+.rm-btn {
+  background: none; border: 1px solid var(--border);
+  cursor: pointer; border-radius: 4px;
+  width: 32px; height: 32px;
+  font-size: 16px; color: var(--ink-3);
+  display: flex; align-items: center; justify-content: center;
+  transition: all 0.12s;
+  font-family: var(--sans);
+}
+.rm-btn:hover { border-color: var(--red); color: var(--red); background: var(--red-bg); }
+
+.add-btn {
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 7px 13px;
+  border: 1px dashed var(--border);
+  border-radius: 4px; background: none;
+  cursor: pointer; font-size: 12px;
+  color: var(--ink-3); font-family: var(--sans);
+  transition: all 0.12s;
+  margin-top: 2px;
+}
+.add-btn:hover { border-color: var(--ink); color: var(--ink); }
+
+.hint { font-size: 11px; color: var(--ink-3); margin-top: 5px; line-height: 1.55; }
+
+/* CUSTOM YEAR CONFIG */
+.year-cfg {
+  display: none;
+  margin-top: 14px;
+  padding: 14px;
+  background: var(--amber-bg);
+  border: 1px solid #C8AC55;
+  border-radius: 4px;
+}
+.year-cfg.on { display: block; }
+.year-cfg h4 {
+  font-size: 11px; font-weight: 600;
+  color: var(--amber); margin-bottom: 10px;
+  font-family: var(--mono); letter-spacing: 0.05em;
+}
+.cfg-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+}
+@media (max-width: 480px) { .cfg-grid { grid-template-columns: 1fr 1fr; } }
+.cfg-f { display: flex; flex-direction: column; gap: 4px; }
+.cfg-f label { font-size: 10px; color: var(--ink-3); }
+.cfg-f input { padding: 6px 9px; font-size: 12px; font-family: var(--mono); }
+
+/* SUBMIT */
+.submit {
+  width: 100%; padding: 14px;
+  background: var(--ink); color: #F4F2EC;
+  border: none; border-radius: 4px;
+  font-family: var(--serif); font-size: 16px; font-weight: 700;
+  cursor: pointer; letter-spacing: 0.02em;
+  transition: all 0.15s;
+}
+.submit:hover { background: #2C2820; box-shadow: 0 6px 20px rgba(28,25,22,0.15); transform: translateY(-1px); }
+.submit:active { transform: none; }
+
+/* RESULT */
+#result { display: none; margin-top: 20px; }
+
+.res-card {
+  border-radius: 8px;
+  border: 1.5px solid transparent;
+  padding: 20px 22px;
+  margin-bottom: 12px;
+}
+.res-card.green { background: var(--green-bg); border-color: #7AB89A; }
+.res-card.red   { background: var(--red-bg);   border-color: #D49090; }
+.res-card.blue  { background: var(--blue-bg);  border-color: #7AAAD0; }
+.res-card.amber { background: var(--amber-bg); border-color: #C8AC55; }
+
+.res-badge {
+  display: inline-block;
+  font-family: var(--mono); font-size: 10px;
+  letter-spacing: 0.1em; text-transform: uppercase;
+  padding: 2px 8px; border-radius: 20px;
+  margin-bottom: 7px; font-weight: 500;
+}
+.green .res-badge { background: #1A6840; color: #E6F2EC; }
+.red   .res-badge { background: #B82020; color: #FAE8E8; }
+.blue  .res-badge { background: #1A5898; color: #E4EDF7; }
+.amber .res-badge { background: #8A6200; color: #F7F0DC; }
+
+.res-title {
+  font-family: var(--serif);
+  font-size: 20px; font-weight: 700;
+  margin-bottom: 6px; line-height: 1.3;
+}
+.green .res-title { color: var(--green); }
+.red   .res-title { color: var(--red); }
+.blue  .res-title { color: var(--blue); }
+.amber .res-title { color: var(--amber); }
+
+.res-reason { font-size: 12px; line-height: 1.7; color: var(--ink-2); }
+.res-reason strong { color: var(--ink); font-weight: 600; }
+
+/* SUMMARY TABLE */
+.sum-card {
+  background: var(--surface);
+  border: 1px solid var(--border-l);
+  border-radius: 8px;
+  overflow: hidden;
+  margin-bottom: 12px;
+}
+.sum-title {
+  padding: 11px 18px;
+  border-bottom: 1px solid var(--border-l);
+  font-size: 11px; font-weight: 500;
+  color: var(--ink-3); font-family: var(--mono);
+  letter-spacing: 0.08em; text-transform: uppercase;
+}
+.sum-row {
+  display: flex; justify-content: space-between; align-items: center;
+  padding: 10px 18px;
+  border-bottom: 1px solid var(--border-l);
+  font-size: 13px;
+}
+.sum-row:last-child { border-bottom: none; }
+.sum-row .k { color: var(--ink-3); font-size: 12px; }
+.sum-row .v { font-weight: 500; }
+.tag {
+  display: inline-block;
+  font-size: 11px; font-weight: 500;
+  padding: 2px 9px; border-radius: 20px;
+  font-family: var(--mono);
+}
+.tag-green { background: var(--green-bg); color: var(--green); }
+.tag-red   { background: var(--red-bg);   color: var(--red); }
+.tag-blue  { background: var(--blue-bg);  color: var(--blue); }
+.tag-amber { background: var(--amber-bg); color: var(--amber); }
+.tag-gray  { background: var(--bg); color: var(--ink-2); border: 1px solid var(--border); }
+
+.reset-btn {
+  display: block; width: 100%; margin-top: 6px;
+  padding: 11px; text-align: center;
+  background: none; border: 1px solid var(--border);
+  border-radius: 4px; cursor: pointer;
+  font-size: 13px; color: var(--ink-3);
+  font-family: var(--sans); transition: all 0.12s;
+}
+.reset-btn:hover { border-color: var(--ink); color: var(--ink); }
+
+.note {
+  font-size: 11px; color: var(--ink-3);
+  text-align: center; padding: 20px 0 8px;
+  line-height: 1.8;
+}
+
+@keyframes up { from { opacity:0; transform:translateY(10px);} to { opacity:1; transform:translateY(0);} }
+.ani { animation: up 0.28s ease both; }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="header-sub">개인사업자 종합소득세</div>
+  <h1>기장의무 · 경비율<br>판단기</h1>
+  <p>직전연도 수입금액 기준 자동 판단 · 겸업(복수 업종) 지원</p>
+</header>
+
+<div class="wrap">
+
+  <!-- STEP 1 귀속연도 -->
+  <div class="card">
+    <div class="card-head">
+      <div class="step-dot">1</div>
+      <h2>귀속연도 & 사업자 구분</h2>
+    </div>
+    <div class="card-body">
+      <div class="row2">
+        <div class="f">
+          <label>귀속연도 <span class="req">*</span></label>
+          <select id="taxYear" onchange="onYearChange()">
+            <option value="2025">2025년 귀속 (2026년 5월 신고)</option>
+            <option value="2024">2024년 귀속 (2025년 5월 신고)</option>
+            <option value="2023">2023년 귀속 (2024년 5월 신고)</option>
+            <option value="custom">직접 입력 (기준금액 수동 설정)</option>
+          </select>
+          <p class="hint">※ 판단 기준 = 직전연도(귀속연도 전년) 수입금액</p>
+        </div>
+        <div class="f">
+          <label>사업자 구분 <span class="req">*</span></label>
+          <select id="bizType">
+            <option value="continue">계속사업자</option>
+            <option value="new">신규사업자 (귀속연도 중 개업)</option>
+          </select>
+        </div>
+      </div>
+
+      <!-- 직접 입력 -->
+      <div class="year-cfg" id="customCfg">
+        <h4>▸ 연도 기준금액 수동 입력 (세법 개정 시 직접 수정)</h4>
+        <p class="hint" style="margin-bottom:10px;">단위: 만원. 이 금액 이상이면 복식부기 의무 / 기준경비율 적용.</p>
+        <div class="cfg-grid">
+          <div class="cfg-f"><label>가군 — 복식부기</label><input type="number" id="c_bk_ga" value="30000"></div>
+          <div class="cfg-f"><label>나군 — 복식부기</label><input type="number" id="c_bk_na" value="15000"></div>
+          <div class="cfg-f"><label>다군 — 복식부기</label><input type="number" id="c_bk_da" value="7500"></div>
+          <div class="cfg-f"><label>가군 — 단순경비율</label><input type="number" id="c_sp_ga" value="6000"></div>
+          <div class="cfg-f"><label>나군 — 단순경비율</label><input type="number" id="c_sp_na" value="3600"></div>
+          <div class="cfg-f"><label>다군 — 단순경비율</label><input type="number" id="c_sp_da" value="2400"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- STEP 2 전문직 -->
+  <div class="card">
+    <div class="card-head">
+      <div class="step-dot">2</div>
+      <h2>전문직 사업자 여부</h2>
+    </div>
+    <div class="card-body">
+      <label class="toggle-row">
+        <input type="checkbox" id="isExpert">
+        <span>변호사 · 의사 · 치과의사 · 한의사 · 수의사 · 약사 · 세무사 · 공인회계사 · 변리사 · 법무사 · 건축사 · 기술사 · 공인노무사 등 전문직에 해당합니다</span>
+      </label>
+      <p class="hint" style="margin-top:8px;">해당 시 수입금액 무관하게 <strong>복식부기 의무자</strong>, 단순경비율 <strong>배제</strong>됩니다.</p>
+    </div>
+  </div>
+
+  <!-- STEP 3 업종 & 수입 -->
+  <div class="card">
+    <div class="card-head">
+      <div class="step-dot">3</div>
+      <h2>업종별 직전연도 수입금액</h2>
+    </div>
+    <div class="card-body">
+      <div id="indList"></div>
+      <button class="add-btn" onclick="addInd()">＋ 업종 추가 (겸업)</button>
+      <p class="hint" style="margin-top:10px;">
+        <strong>가군</strong>: 도소매, 농·임·어업, 부동산매매, 광업<br>
+        <strong>나군</strong>: 제조, 음식·숙박, 건설, 운수, 출판·통신·정보<br>
+        <strong>다군</strong>: 서비스, 부동산임대, 교육, 보건, 금융·보험
+      </p>
+    </div>
+  </div>
+
+  <button class="submit" onclick="calc()">판단하기</button>
+
+  <!-- RESULT -->
+  <div id="result">
+    <div id="rBody"></div>
+    <button class="reset-btn" onclick="resetAll()">↺ 다시 입력하기</button>
+    <p class="note">이 결과는 일반적인 안내 목적입니다. 실제 신고는 세무사와 확인하세요.<br>세법 개정 시 "직접 입력" 모드에서 기준금액을 수동으로 수정할 수 있습니다.</p>
+  </div>
+
+</div>
+
+<script>
+// ── 연도별 기준금액 ──────────────────────────────
+const STD = {
+  2023: { bk:{가:30000,나:15000,다:7500}, sp:{가:6000,나:3600,다:2400} },
+  2024: { bk:{가:30000,나:15000,다:7500}, sp:{가:6000,나:3600,다:2400} },
+  2025: { bk:{가:30000,나:15000,다:7500}, sp:{가:6000,나:3600,다:2400} },
+};
+
+let cnt = 0;
+
+window.onload = () => addInd();
+
+function onYearChange() {
+  const v = document.getElementById('taxYear').value;
+  document.getElementById('customCfg').classList.toggle('on', v === 'custom');
+}
+
+function getStd() {
+  const y = document.getElementById('taxYear').value;
+  if (y === 'custom') return {
+    bk: { 가: +document.getElementById('c_bk_ga').value||30000, 나: +document.getElementById('c_bk_na').value||15000, 다: +document.getElementById('c_bk_da').value||7500 },
+    sp: { 가: +document.getElementById('c_sp_ga').value||6000,  나: +document.getElementById('c_sp_na').value||3600,  다: +document.getElementById('c_sp_da').value||2400 }
+  };
+  return STD[+y] || STD[2025];
+}
+
+function addInd() {
+  const id = ++cnt;
+  const d = document.createElement('div');
+  d.className = 'ind-item'; d.id = 'ind_'+id;
+  d.innerHTML = `
+    <div class="f">
+      <label>업종 구분 <span class="req">*</span></label>
+      <select id="code_${id}">
+        <option value="">선택</option>
+        <option value="가">가군 — 도소매 / 농업 / 부동산매매</option>
+        <option value="나">나군 — 제조 / 음식·숙박 / 건설 / 운수</option>
+        <option value="다">다군 — 서비스 / 부동산임대 / 교육 / 보건</option>
+      </select>
+    </div>
+    <div class="f">
+      <label>직전연도 수입금액 <span class="req">*</span></label>
+      <div class="inp-wrap">
+        <input type="number" id="rev_${id}" placeholder="0" min="0">
+        <span class="inp-unit">만원</span>
+      </div>
+    </div>
+    <button class="rm-btn" onclick="rmInd(${id})">×</button>`;
+  document.getElementById('indList').appendChild(d);
+}
+
+function rmInd(id) {
+  if (document.querySelectorAll('.ind-item').length <= 1) return alert('최소 1개 업종이 필요합니다.');
+  document.getElementById('ind_'+id)?.remove();
+}
+
+// 겸업 환산 수입금액 계산
+function converted(inds, std) {
+  const main = inds.reduce((a,b) => a.rev>=b.rev ? a : b);
+  const base = std.bk[main.code];
+  const total = inds.reduce((s,i) => s + i.rev * (base / std.bk[i.code]), 0);
+  return { total, mainCode: main.code, mainBkThreshold: base };
+}
+
+function calc() {
+  const isExpert = document.getElementById('isExpert').checked;
+  const isNew    = document.getElementById('bizType').value === 'new';
+  const std      = getStd();
+  const year     = document.getElementById('taxYear').value;
+  const yLabel   = year === 'custom' ? '직접 입력 연도' : year + '년 귀속';
+
+  // 업종 수집
+  const items = document.querySelectorAll('.ind-item');
+  const inds = [];
+  for (const el of items) {
+    const id   = el.id.replace('ind_','');
+    const code = document.getElementById('code_'+id).value;
+    const rev  = parseFloat(document.getElementById('rev_'+id).value) || 0;
+    if (!code) return alert('모든 업종 구분을 선택해주세요.');
+    inds.push({ code, rev });
+  }
+
+  const { total: cvt, mainCode: mc, mainBkThreshold: bkThr } = converted(inds, std);
+  const spThr = std.sp[mc];
+  const totalRev = inds.reduce((s,i) => s+i.rev, 0);
+
+  // ── 기장의무 판단 ───────────────────────────────
+  let bookType, bookColor, bookReason;
+  if (isExpert) {
+    bookType = '복식부기 의무자'; bookColor = 'red';
+    bookReason = '전문직 사업자 — 수입금액 무관하게 복식부기 의무';
+  } else if (isNew) {
+    bookType = '간편장부 대상자'; bookColor = 'green';
+    bookReason = '신규사업자 — 귀속연도 중 개업, 수입금액 무관하게 간편장부 대상';
+  } else {
+    if (cvt >= bkThr) {
+      bookType = '복식부기 의무자'; bookColor = 'red';
+      bookReason = `직전연도 환산수입 <strong>${fmt(cvt)}만원</strong> ≥ 기준 <strong>${fmt(bkThr)}만원</strong> (${mc}군)`;
+    } else {
+      bookType = '간편장부 대상자'; bookColor = 'green';
+      bookReason = `직전연도 환산수입 <strong>${fmt(cvt)}만원</strong> < 기준 <strong>${fmt(bkThr)}만원</strong> (${mc}군)`;
+    }
+  }
+
+  // ── 경비율 판단 ─────────────────────────────────
+  let expType, expColor, expReason;
+  if (isExpert) {
+    expType = '기준경비율 적용'; expColor = 'amber';
+    expReason = '전문직 사업자 — 단순경비율 적용 배제';
+  } else if (isNew) {
+    expType = '단순경비율 적용'; expColor = 'blue';
+    expReason = `신규사업자 — 단순경비율 적용 (단, 당해연도 수입이 <strong>${fmt(bkThr)}만원</strong> 이상이면 기준경비율로 전환)`;
+  } else {
+    // 계속사업자: 직전연도 기준
+    if (cvt >= spThr) {
+      expType = '기준경비율 적용'; expColor = 'amber';
+      expReason = `직전연도 환산수입 <strong>${fmt(cvt)}만원</strong> ≥ 단순경비율 기준 <strong>${fmt(spThr)}만원</strong> (${mc}군)`;
+    } else {
+      expType = '단순경비율 적용'; expColor = 'blue';
+      expReason = `직전연도 환산수입 <strong>${fmt(cvt)}만원</strong> < 단순경비율 기준 <strong>${fmt(spThr)}만원</strong> (${mc}군)`;
+    }
+  }
+
+  // ── 결과 렌더링 ─────────────────────────────────
+  const bookTagCls = bookColor === 'green' ? 'tag-green' : 'tag-red';
+  const expTagCls  = expColor  === 'blue'  ? 'tag-blue'  : 'tag-amber';
+
+  const indRows = inds.map(i => `
+    <div class="sum-row">
+      <span class="k">${i.code}군 수입</span>
+      <span class="v"><span class="tag tag-gray">${i.code}군</span>&nbsp; ${fmt(i.rev)}만원</span>
+    </div>`).join('');
+
+  const cvtRow = inds.length > 1 ? `
+    <div class="sum-row">
+      <span class="k">환산 수입 (주업종 기준)</span>
+      <span class="v">${fmt(cvt)}만원</span>
+    </div>` : '';
+
+  const html = `
+    <div class="res-card ${bookColor} ani">
+      <div class="res-badge">기장의무</div>
+      <div class="res-title">${bookType}</div>
+      <div class="res-reason">${bookReason}</div>
+    </div>
+    <div class="res-card ${expColor} ani" style="animation-delay:0.08s">
+      <div class="res-badge">경비율</div>
+      <div class="res-title">${expType}</div>
+      <div class="res-reason">${expReason}</div>
+    </div>
+    <div class="sum-card ani" style="animation-delay:0.14s">
+      <div class="sum-title">입력 요약</div>
+      <div class="sum-row"><span class="k">귀속연도</span><span class="v">${yLabel}</span></div>
+      <div class="sum-row"><span class="k">사업자 구분</span><span class="v">${isNew ? '신규사업자' : '계속사업자'}</span></div>
+      ${indRows}
+      ${cvtRow}
+      <div class="sum-row"><span class="k">기장의무</span><span class="v"><span class="tag ${bookTagCls}">${bookType}</span></span></div>
+      <div class="sum-row"><span class="k">경비율</span><span class="v"><span class="tag ${expTagCls}">${expType}</span></span></div>
+    </div>`;
+
+  document.getElementById('rBody').innerHTML = html;
+  const el = document.getElementById('result');
+  el.style.display = 'block';
+  el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+
+function fmt(n) { return Math.round(n).toLocaleString('ko-KR'); }
+
+function resetAll() {
+  document.getElementById('result').style.display = 'none';
+  document.getElementById('indList').innerHTML = '';
+  cnt = 0; addInd();
+  document.getElementById('taxYear').value = '2025';
+  document.getElementById('bizType').value = 'continue';
+  document.getElementById('isExpert').checked = false;
+  document.getElementById('customCfg').classList.remove('on');
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+</script>
+</body>
+</html>
